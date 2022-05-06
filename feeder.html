@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feeder Code</title>
+    <link rel="stylesheet" href="./prism/prism.css">
+    <style>
+        body {
+            margin: 0;
+        }
+
+        pre[class*=language-] {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <pre>
+        <code class="language-c">
+            // Feeder - The Eco Tank
+
+            #include &lt;Timer.h>
+            #include &lt;Servo.h>
+            #include &lt;LiquidCrystal_I2C.h>
+            #include &lt;Wire.h>
+            
+            LiquidCrystal_I2C lcd(0x27, 16, 2);
+            
+            Servo servo;
+            
+            Timer timer;
+            
+            int button1 = 2;
+            int val1 = 1;
+            
+            
+            // 0 = Every hour
+            // 1 = Every 12 hours
+            // 2 = Every 24 hours
+            int interval = 0;
+            
+            void setup() {
+              // put your setup code here, to run once:
+              Serial.begin(9600); 
+            
+              servo.attach(9);
+              servo.write(90);
+            
+              pinMode(button1, INPUT_PULLUP);
+              
+               lcd.init(); //initialize the lcd
+               lcd.backlight(); //open the backlight 
+               lcd.print("Welcome to");
+               lcd.setCursor(0, 1);
+               lcd.print("The Eco Tank!");
+               delay(3000);
+               start();
+               timer.start();
+            }
+            
+            void loop() {
+            //  runServo();
+              val1 = digitalRead(button1);
+              if(val1 == 0) {
+                 if(interval == 2){
+                    interval = 0;
+                 } else {
+                    interval++;
+                 }
+                 displayInterval();
+                 delay(500);
+                 timer.stop();
+                 runServo();
+                 timer.start();
+               }
+              
+              checkTime();
+            }
+            
+            void start() {
+              lcd.clear();
+              lcd.print("Set your feeding");
+              jump();
+              lcd.print("schedule:");
+              delay(3000);
+              displayInterval();
+            }
+            
+            void jump() {
+              lcd.setCursor(0, 1);
+            }
+            
+            void displayInterval() {
+              lcd.clear();
+            
+              switch(interval) {
+                case 0:
+                  lcd.print("- Every hour");
+                  jump();
+                  lcd.print("  Every 12 hours");
+                  break;
+                case 1:
+                  lcd.print("  Every hour");
+                  jump();
+                  lcd.print("- Every 12 hours");
+                  break;
+                case 2:
+                  lcd.print("- Every 24 hours");
+                  break;
+              }
+            }
+            
+            bool checkTime() {
+              int stopwatch = timer.read();
+              int milli = intervalToMilli();
+              if(stopwatch == milli) {
+                timer.stop();
+                runServo();
+                timer.start();
+              }
+            }
+            
+            int intervalToMilli() {
+              switch(interval) {
+                case 0:
+            //      return 3600000;
+                    return 1000;
+                case 1:
+            //      return 43200000;
+                    return 5000;
+                case 2:
+            //      return 86400000;
+                    return 10000;
+              }
+            }
+            
+            void runServo() {
+              servo.write(0);
+              delay(1000);
+              servo.write(90);
+            }
+            </code>
+    </pre>
+    <script src="./prism/prism.js"></script>
+</body>
+</html>
